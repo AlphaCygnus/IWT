@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Book Fetcher</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      body {
+        font-family: "Helvetica", sans-serif;
+        margin: 0;
+        padding: 0;
+        color: #fff; /* Text color on the banner */
+        text-align: center; /* Center align text */
+      }
+      .background-container {
+        background-image: url("pic/janko-ferlic-sfL_QOnmy00-unsplash.jpg"); /* Replace with your image path */
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .header {
+        padding: 20px;
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.5
+        ); /* Semi-transparent black background */
+        margin-bottom: 20px;
+        border-radius: 10px; /* Add border-radius for rounded corners */
+      }
+      h1 {
+        margin: 0;
+        font-size: 48px;
+        font-family: "Arial Black", sans-serif; /* Use Arial Black font for Book Finder */
+        margin-bottom: 20px; /* Add some space below Book Finder */
+      }
+      #searchInput {
+        padding: 8px;
+        font-size: 16px;
+        width: 300px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+      #loadBooks {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #fff01bc2;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      #bookList {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #bookList li {
+        margin: 10px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        width: 250px;
+        border-radius: 10px; /* Rounded corners for book list items */
+      }
+      #bookList img {
+        margin-bottom: 10px;
+        width: 100px;
+        height: auto;
+      }
+      #bookList h3 {
+        margin-top: 0;
+        font-size: 20px;
+      }
+      #bookList p {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background-container">
+      <div class="header">
+        <h1>Book Finder</h1>
+        <input type="text" id="searchInput" placeholder="Search by title" />
+        <button id="loadBooks">Load Books</button>
+      </div>
+
+      <ul id="bookList"></ul>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        let allBooks = []; // Store all books fetched from the API
+
+        $("#loadBooks").on("click", function () {
+          const searchQuery = $("#searchInput").val(); // Get the search query from the input field
+          $.ajax({
+            url:
+              "https://www.googleapis.com/books/v1/volumes?q=" +
+              searchQuery +
+              "&key=AIzaSyB7J2UhjKEAcOmmFWz97OAiWZ1EV5eC7bw", // Replace with your API key
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+              allBooks = data.items || []; // Store all books in the array (assuming 'items' contain books in Google Books API)
+              displayBooks(allBooks); // Display all books initially
+            },
+            error: function (xhr, status, error) {
+              console.error(status + ": " + error);
+            },
+          });
+        });
+
+        function displayBooks(books) {
+          $("#bookList").empty(); // Clear previous list
+          $.each(books, function (index, book) {
+            const title = book.volumeInfo.title || "No Title Available";
+            const authors =
+              book.volumeInfo.authors && book.volumeInfo.authors.length > 0
+                ? book.volumeInfo.authors.join(", ")
+                : "Unknown Author";
+            const description =
+              book.volumeInfo.description || "No description available";
+            const thumbnail =
+              book.volumeInfo.imageLinks && book.volumeInfo.imageLinks.thumbnail
+                ? book.volumeInfo.imageLinks.thumbnail
+                : "";
+
+            // Display detailed information about the book
+            $("#bookList").append(`
+                <li>
+                    <img src="${thumbnail}" alt="Book Cover" style="width: 100px; height: auto;">
+                    <h3>${title}</h3>
+                    <p><strong>Authors:</strong> ${authors}</p>
+                    <p><strong>Description:</strong> ${description}</p>
+                </li>
+            `);
+          });
+        }
+
+        // Event listener for search input changes
+        $("#searchInput").on("input", function () {
+          const searchQuery = $(this).val();
+          const filteredBooks = allBooks.filter(function (book) {
+            return book.volumeInfo.title
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase());
+          });
+          displayBooks(filteredBooks); // Display filtered books
+        });
+      });
+    </script>
+  </body>
+</html>
